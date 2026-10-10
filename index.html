@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nufăr din Particule</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0b0f19;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .info {
+            position: absolute;
+            bottom: 20px;
+            text-align: center;
+            opacity: 0.7;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="waterLilyCanvas"></canvas>
+    <div class="info">Mișcă mouse-ul pentru a interacționa cu nufărul din pixeli</div>
+
+    <script>
+        const canvas = document.getElementById('waterLilyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let mouse = { x: null, y: null, radius: 150 };
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.clientX;
+            mouse.y = event.clientY;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        const particles = [];
+        const numParticles = 1200;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        for (let i = 0; i < numParticles; i++) {
+            let angle = i * 2.4; 
+            let radius = 8 * Math.sqrt(i);
+            
+            let xOriginal = centerX + Math.cos(angle) * (radius * 0.8 + Math.sin(i * 0.5) * 20);
+            let yOriginal = centerY + Math.sin(angle) * (radius * 0.8 + Math.cos(i * 0.5) * 20);
+
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                baseX: xOriginal,
+                baseY: yOriginal,
+                size: Math.random() * 2 + 1,
+                color: i % 3 === 0 ? '#4ade80' : (i % 3 === 1 ? '#2dd4bf' : '#38bdf8'),
+                density: (Math.random() * 20) + 2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+
+                let dx = mouse.x - p.x;
+                let dy = mouse.y - p.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (mouse.x !== null && distance < mouse.radius) {
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    let directionX = dx / distance;
+                    let directionY = dy / distance;
+                    p.x -= directionX * force * 10;
+                    p.y -= directionY * force * 10;
+                } else {
+                    let dxBase = p.baseX - p.x;
+                    let dyBase = p.baseY - p.y;
+                    p.x += dxBase * 0.05;
+                    p.y += dyBase * 0.05;
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
